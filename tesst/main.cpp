@@ -5,15 +5,6 @@
 #include <pthread.h>
 #include "dataProcess.h"
 
-
-
-void* mdataSend1(void*){
-	while(1){
-		printf("hello1");
-		sleep(1);
-	}
-}
-
 int main() {
 //	time_t t= time(0);
 //	printf("aaa:%ld",t);
