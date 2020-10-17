@@ -17,7 +17,23 @@ void* mdataSend1(void*){
 int main() {
 //	time_t t= time(0);
 //	printf("aaa:%ld",t);
+
+//	while(1){
+//		printf("writing to socket\n");
+//		inet_write(sock,my_data,6);
+//		sleep(5);
+//	}
+
+
+
 	pthread_create(&sendThread,NULL,mdataRead,NULL);
 	while(1);
 	return 0;
 }
+
+
+
+
+
+
+
