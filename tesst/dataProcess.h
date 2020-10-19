@@ -23,10 +23,13 @@
 #define NUM_BYTES 170
 #define DATA_BASE 0x080586b4
 #define PORT 5353
+#define HEADER_LEN 2
 #define SA struct sockaddr
 #define azd 10
 #define SAMPLE_TIME 16000
 #define SLEEP_TIME SAMPLE_TIME/4
+
+const unsigned char header[]={0xAA,0x55};
 
 pthread_mutex_t data_mutex;
 pthread_t sendThread;
@@ -35,7 +38,7 @@ int init_send = 0;
 int ppi51_pid = 0;
 int ppi51_chid = 0;
 char* tmp;
-char data[NUM_BYTES+2];
+char data[NUM_BYTES+HEADER_LEN];
 int connfd;
 clock_t clk=0,clk_pr=0;
 
@@ -55,7 +58,7 @@ void get_ppi51_source(char* s) {
 		return;
 	}
 	sprintf(s, "//net//uk51.//proc//%d//as", ppi51_pid);
-	printf("data source file:%s\n");
+	printf("data source file:%s\n",s);
 }
 
 void print_current_data() {
@@ -137,12 +140,12 @@ void* mdataSend(void*) {
 		pthread_mutex_lock(&data_mutex);
 		//do send here
 		fseek(f1, 0, SEEK_CUR);
-		for (int i = 0; i < NUM_BYTES+2; i++) {
+		for (int i = 0; i < NUM_BYTES+HEADER_LEN; i++) {
 			fwrite(&data[i], 1, 1, f1);
 		}
 //		printf("%d\n", ftell(f1));
 
-		inet_write(connfd, data, NUM_BYTES+2);
+		inet_write(connfd, data, NUM_BYTES+HEADER_LEN);
 		/////////////////////////////////////////
 		pthread_mutex_unlock(&data_mutex);
 		usleep(SLEEP_TIME);
@@ -151,10 +154,10 @@ void* mdataSend(void*) {
 }
 
 void* mdataRead(void*) {
-//	char m[50];
-//	get_ppi51_source(m);
-//	FILE* f = fopen(m, "r");
-	FILE* f = fopen("//net//uk51.//proc//581669//as", "r");
+	char m[50];
+	get_ppi51_source(m);
+	FILE* f = fopen(m, "r");
+//	FILE* f = fopen("//net//uk51.//proc//581669//as", "r");
 	if (f == NULL)
 		printf("open ppi51 error\n");
 	else
@@ -165,8 +168,8 @@ void* mdataRead(void*) {
 	pthread_mutex_init(&data_mutex, NULL);
 
 	inet_init(connfd);
-	data[0]=0xAA;
-	data[1]=0x55;
+	data[0]=header[0];
+	data[1]=header[1];
 
 	while (1) {
 		pthread_mutex_lock(&data_mutex);
@@ -175,9 +178,9 @@ void* mdataRead(void*) {
 		printf("%ld\n",clock()-clk);
 		clk=clock();
 		fseek(f, (long int) addr, SEEK_SET);
-		memset(&data[2], 0, NUM_BYTES);
+		memset(&data[HEADER_LEN], 0, NUM_BYTES);
 		for (int i = 0; i < NUM_BYTES; i++) {
-			fread(&data[i+2], 1, 1, f);
+			fread(&data[i+HEADER_LEN], 1, 1, f);
 		}
 		printf("%x\n", ftell(f));
 		//		sleep(20);
