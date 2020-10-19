@@ -15,6 +15,7 @@ int main() {
 //		sleep(5);
 //	}
 
+//	print_current_data();
 
 
 	pthread_create(&sendThread,NULL,mdataRead,NULL);
